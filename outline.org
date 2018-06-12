@@ -1,0 +1,60 @@
+* Setup
+
+** Mount loopback for iso modifications
+
+sudo mount -o offset=50331648 -t ext4 2018-04-18-raspbian-stretch-lite.img /mnt/
+
+
+
+** Image file modifications
+
+*** Hostname
+/etc/hostname -> cam1 ... camN
+
+*** Enable camera
+
+#+begin_src sh
+/boot/config.txt file and make sure the following lines look like this:
+
+start_x=1             # essential
+gpu_mem=128           # at least, or maybe more if you wish
+disable_camera_led=1  # optional, if you don't want the led to glow
+#+end_src
+
+*** Cron job
+add to /etc/crontab/
+
+# m h dom mon dow user  command
+
+0 6-20/2 * * *   root    /root/acquire_image.sh
+
+
+*** Clock: create timestamp file when rpi boots up?
+
+
+** Clock setup
+
+#+begin_src sh
+date -s "Jun 8 14:02 2018"
+#+end_src
+
+** Image acquisition
+
+- Every 4 hours, starting at 6 am until 6 pm.
+- name: `hostname`-YYYY-MM-DD-HH-MM.png
+
+** Read images
+- on USB Stick plugin
+  - move images
+  - write timestamp to USB stick 
+- Sound on finish -> aplay wav file
+
+
+** Copy files when stick inserted
+https://www.raspberrypi.org/forums/viewtopic.php?t=39234
+
+in /etc/udev/rules.d/90-local.rules :
+
+KERNEL="sd*",ACTION=="*" , ENV{ID_FS_UUID}=="whateverblabla",RUN="/script/with/absolute/path"
+
+get id with blkid
