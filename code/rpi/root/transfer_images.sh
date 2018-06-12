@@ -1,8 +1,11 @@
 #!/bin/bash
 
+KERNEL=$1
+ACTION=$2
+
 case "$ACTION" in
     add)
-	mount  /dev/sda1 /mnt/
+	mount  /dev/$KERNEL /mnt/
 	mkdir -p /mnt/$(hostname)
 	mv /home/pi/images/*.png /mnt/$(hostname)
 	echo "$(hostname) $(date +%F_%H:%M)" >> /mnt/$(hostname)/copylog.txt

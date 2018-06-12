@@ -10,11 +10,13 @@ USB_STICK_FS_ID=5128b582-8ea0-4357-9283-fb4383dac09e
 
 # Adapt this if needed.
 CRON_SCHEDULE="0 6-20/2 * * *"
+# CRON_SCHEDULE="*/2 * * * *" # for testing, every 2 minutes
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TEMPLATE_IMAGE=${SCRIPT_DIR}/../data/2018-04-18-raspbian-stretch-lite.img
 RPI_TEMPLATE_DIR=${SCRIPT_DIR}/rpi/
-RPI_MOUNT_DIR=/mnt
+RPI_MOUNT_DIR=/mnt/root
+RPI_BOOT_MOUNT_DIR=/mnt/boot
 #
 ################################################################################
 
@@ -93,22 +95,18 @@ cp $TEMPLATE_IMAGE $PI_IMAGE
 echo " DONE"
 
 echo "Mounting the PI file system."
+sudo bash -c "mkdir -p $RPI_MOUNT_DIR"
 sudo bash -c "mount -o offset=50331648 -t ext4 $PI_IMAGE $RPI_MOUNT_DIR"
-
 echo "Customizing image ..."
 echo ""
 # Hostame
 echo $HOSTNAME | sudo tee $RPI_MOUNT_DIR/etc/hostname
 
-# Enable camera
-echo "start_x=1" | sudo tee -a $RPI_MOUNT_DIR/boot/config.txt
-echo "gpu_mem=128" | sudo tee -a $RPI_MOUNT_DIR/boot/config.txt
-
 # Set up cron job
 echo "$CRON_SCHEDULE   root    /root/acquire_image.sh" |sudo tee -a $RPI_MOUNT_DIR/etc/crontab
 
 # Add udev rule for auto copy on mount
-echo "KERNEL=\"sd*\",ACTION==\"*\" , ENV{ID_FS_UUID}==\"${USB_STICK_FS_ID}\",RUN=\"/root/transfer_images.sh\"" | sudo tee $RPI_MOUNT_DIR/etc/udev/rules.d/90-local.rules
+echo "KERNEL==\"sd*\",ACTION==\"add\" , ENV{ID_FS_UUID}==\"${USB_STICK_FS_ID}\",RUN=\"/root/transfer_images.sh %k add\"" | sudo tee $RPI_MOUNT_DIR/etc/udev/rules.d/90-local.rules
 
 # Copy image handling files
 sudo cp $RPI_TEMPLATE_DIR/root/acquire_image.sh $RPI_MOUNT_DIR/root/
@@ -116,12 +114,22 @@ sudo chmod +x $RPI_MOUNT_DIR/root/acquire_image.sh
 
 sudo cp $RPI_TEMPLATE_DIR/root/transfer_images.sh $RPI_MOUNT_DIR/root/
 sudo chmod +x $RPI_MOUNT_DIR/root/transfer_images.sh
+sudo umount $RPI_MOUNT_DIR
 
-echo " DONE"
+# Camera setup
+echo "Mounting the PI boot file system."
+sudo bash -c "mkdir -p $RPI_BOOT_MOUNT_DIR"
+sudo bash -c "mount -o offset=4194304 -t vfat $PI_IMAGE $RPI_BOOT_MOUNT_DIR"
+ 
+echo "start_x=1" | sudo tee -a $RPI_BOOT_MOUNT_DIR/config.txt
+echo "gpu_mem=128" | sudo tee -a $RPI_BOOT_MOUNT_DIR/config.txt
+sudo umount $RPI_BOOT_MOUNT_DIR
+echo "DONE"
 echo ""
+
 # Clean up
 echo -n "Copying temporary image and cleaning up ..."
-sudo umount /mnt
+
 cp $PI_IMAGE $OUTPUT_DIR/$HOSTNAME.img
 rm -rf $TMPDIR
 echo " DONE"
