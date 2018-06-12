@@ -13,6 +13,9 @@ sudo mount -o offset=50331648 -t ext4 2018-04-18-raspbian-stretch-lite.img /mnt/
 
 *** Enable camera
 
+needs boot partition
+sudo mount -o offset=4194304 -t vfat /tmp/cam1.img /mnt/
+
 #+begin_src sh
 /boot/config.txt file and make sure the following lines look like this:
 
@@ -22,7 +25,7 @@ disable_camera_led=1  # optional, if you don't want the led to glow
 #+end_src
 
 *** Cron job
-add to /etc/crontab/
+add to /etc/crontab
 
 # m h dom mon dow user  command
 
@@ -58,3 +61,7 @@ in /etc/udev/rules.d/90-local.rules :
 KERNEL="sd*",ACTION=="*" , ENV{ID_FS_UUID}=="whateverblabla",RUN="/script/with/absolute/path"
 
 get id with blkid
+
+** Write image:
+
+sudo dd if=cam1.img iflag=direct of=/dev/sdd bs=4M
