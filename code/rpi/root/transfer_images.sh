@@ -7,10 +7,13 @@ case "$ACTION" in
     add)
 	mount  /dev/$KERNEL /mnt/
 	mkdir -p /mnt/$(hostname)
-	mv /home/pi/images/*.png /mnt/$(hostname)
-	echo "$(hostname) $(date +%F_%H:%M)" >> /mnt/$(hostname)/copylog.txt
+	cp /home/pi/images/*.png /mnt/$(hostname)
+        cp /home/pi/images/*.jpg /mnt/$(hostname)
+        rm /home/pi/images/*.png
+        rm /home/pi/images/*.jpg
+	echo "$(hostname) $(date +%F_%H_%M)" >> /mnt/$(hostname)/copylog.txt
 	mkdir -p /mnt/$(hostname)/syslog/
-	cp /var/log/syslog /mnt/$(hostname)/syslog/syslog.$(date +%F_%H:%M)
+	cp /var/log/syslog /mnt/$(hostname)/syslog/syslog.$(date +%F_%H_%M)
 	umount /mnt/
       ;;
     # remove)
