@@ -115,6 +115,7 @@ echo "KERNEL==\"sd*\",ACTION==\"add\" , ENV{ID_FS_UUID}==\"${USB_STICK_FS_ID}\",
 echo "!/bin/sh -e" |sudo tee $RPI_MOUNT_DIR/etc/rc.local
 echo "/etc/init.d/udev restart" |sudo tee -a $RPI_MOUNT_DIR/etc/rc.local
 echo "exit 0" |sudo tee -a $RPI_MOUNT_DIR/etc/rc.local
+sudo chmod +x $RPI_MOUNT_DIR/etc/rc.local
 
 # Copy image handling files
 sudo cp $RPI_TEMPLATE_DIR/root/acquire_image.sh $RPI_MOUNT_DIR/root/
